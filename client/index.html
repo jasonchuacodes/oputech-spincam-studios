@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/assets/brand/icon-192.png" />
+    <link rel="apple-touch-icon" href="/assets/brand/icon-apple-touch-180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#2BB6C4" />
+    <meta name="description" content="spincam" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="spincam" />
+    <title>spincam</title>
+    <style>
+      /* App loading splash — replaced by React once it mounts */
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+      }
+      #app-splash img {
+        width: 88px;
+        height: 88px;
+        animation: app-splash-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes app-splash-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.55; transform: scale(0.92); }
+      }
+      @media (prefers-color-scheme: dark) {
+        #app-splash { background: #0f172a; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div id="app-splash">
+        <img src="/assets/brand/icon-192.png" alt="spincam" width="88" height="88" />
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
