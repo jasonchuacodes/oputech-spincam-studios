@@ -105,7 +105,7 @@ function AuthProvider({ children }: { children?: ReactNode }) {
     return () => clearInterval(interval)
   }, [serverAuth, endSession])
 
-  const loading = (isLoading && cached === undefined) || isLoggingOut
+  const loading = isLoading || cached === undefined || isLoggingOut
 
   const value = useMemo(
     () => ({ auth, loading, offlineSession, refetch, logout }),

@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react'
 import { Button, Input, Label, PasswordInput } from '../../components'
 import { Footer } from './components/Footer'
 import { LoginLayout } from './components/LoginLayout'
-import { PublicRoutes } from '../../routes/paths'
+import { PublicRoutes, UserRoutes } from '../../routes/paths'
 import { useLoginMutation } from '../../services/auth/auth.queries'
 import { useAuthContext } from '../../context/auth/useAuthContext'
 import { LoginInput } from '../../services/auth/auth.types'
 import { loginSchema } from './schemas/login.schema'
+import { UserRole } from '../../types'
 
 export default function LoginPage() {
   const { auth, loading, refetch: refetchAuth } = useAuthContext()
@@ -50,9 +51,10 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-    if (!loading && auth) {
-      navigate('/', { replace: true })
-    }
+    if (loading || !auth) return
+
+    if (auth.role === UserRole.ADMIN) navigate(UserRoutes.Home, { replace: true })
+    if (auth.role === UserRole.USER) navigate(UserRoutes.POS, { replace: true })
   }, [auth, loading, navigate])
 
   return (

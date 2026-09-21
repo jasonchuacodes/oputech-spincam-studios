@@ -1,11 +1,6 @@
 import { UserRole as AppUserRole } from '../../types'
 import { ActivityStatus } from '../users/users.types'
 
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-}
-
 export interface LoginInput {
   username: string
   password: string
