@@ -32,11 +32,11 @@ export class ProductResolver {
     }
 
     const imageSizeBytes = this.getBase64Size(match[1])
-    const maxSizeBytes = 5 * 1024 * 1024
+    const maxSizeBytes = 100 * 1024
 
     if (imageSizeBytes > maxSizeBytes) {
       throw new BadRequestException(
-        `Image size must be smaller than 5MB (received ${Math.round(imageSizeBytes / (1024 * 1024))}MB)`
+        `Image size must be 100KB or smaller (received ${Math.ceil(imageSizeBytes / 1024)}KB)`
       )
     }
 

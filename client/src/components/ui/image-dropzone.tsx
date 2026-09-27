@@ -1,6 +1,11 @@
-import { useRef, type DragEvent } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import { ImagePlus, X } from 'lucide-react'
 import { cn } from '../../utils/cn'
+import {
+  isSupportedImageType,
+  MAX_IMAGE_SOURCE_SIZE_BYTES,
+  optimizeImage,
+} from '../../utils/image'
 
 interface ImageDropzoneProps {
   value?: string
@@ -16,16 +21,17 @@ export const ImageDropzone = ({
   onChange,
   onError,
   disabled,
-  maxSizeBytes = 5 * 1024 * 1024,
+  maxSizeBytes = MAX_IMAGE_SOURCE_SIZE_BYTES,
   className,
 }: ImageDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [processing, setProcessing] = useState(false)
 
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return
 
-    if (!file.type.startsWith('image/')) {
-      onError?.('Please upload an image file')
+    if (!isSupportedImageType(file.type)) {
+      onError?.('Please upload a JPEG, PNG, or WebP image')
       return
     }
 
@@ -36,16 +42,20 @@ export const ImageDropzone = ({
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => onChange(reader.result as string)
-    reader.onerror = () => onError?.('Could not read file')
-    reader.readAsDataURL(file)
+    setProcessing(true)
+    try {
+      onChange(await optimizeImage(file))
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : 'Could not optimize image')
+    } finally {
+      setProcessing(false)
+    }
   }
 
   const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault()
-    if (disabled) return
-    handleFile(e.dataTransfer.files[0])
+    if (disabled || processing) return
+    void handleFile(e.dataTransfer.files[0])
   }
 
   const handleRemove = () => {
@@ -60,7 +70,7 @@ export const ImageDropzone = ({
           alt="Product preview"
           className="border-border h-24 w-24 rounded-md border object-cover"
         />
-        {!disabled && (
+        {!disabled && !processing && (
           <button
             type="button"
             onClick={handleRemove}
@@ -80,21 +90,27 @@ export const ImageDropzone = ({
       onDrop={handleDrop}
       className={cn(
         'border-border text-muted-foreground flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 select-none',
-        disabled
+        disabled || processing
           ? 'cursor-not-allowed opacity-50'
           : 'hover:border-brand hover:text-foreground cursor-pointer',
         className
       )}
     >
       <ImagePlus size={24} />
-      <p className="text-sm">Drag & drop or click to upload</p>
+      <p className="text-sm">
+        {processing ? 'Optimizing image…' : 'Drag & drop or click to upload'}
+      </p>
+      {!processing && <p className="text-xs">Automatically resized for fast sync</p>}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
-        disabled={disabled}
+        disabled={disabled || processing}
         className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
+        onChange={(e) => {
+          void handleFile(e.target.files?.[0])
+          e.target.value = ''
+        }}
       />
     </label>
   )
