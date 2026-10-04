@@ -57,7 +57,7 @@ export const CurrentSale = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-lg border bg-white p-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-slate-800">Current Sale</h2>
+        <h2 className="font-semibold text-slate-800">Review</h2>
         {hasItems && (
           <button
             onClick={onClear}

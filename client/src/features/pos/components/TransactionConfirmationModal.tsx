@@ -33,7 +33,6 @@ export const TransactionConfirmationModal = ({
     <CustomModal
       open={open}
       title="Confirm Transaction"
-      subheader="Review the transaction details before saving."
       icon={ReceiptText}
       submitText="Confirm"
       cancelText="Cancel"

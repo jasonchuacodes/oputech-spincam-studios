@@ -8,12 +8,20 @@ interface UsePullToRefreshOptions {
 const REFRESH_SETTLE_DELAY = 500
 const DIRECTION_LOCK_THRESHOLD = 10
 
-const startsInHorizontalScroller = (target: EventTarget | null, boundary: HTMLElement): boolean => {
+const startsInNestedScroller = (
+  target: EventTarget | null,
+  boundary: HTMLElement
+): boolean => {
   let node = target instanceof Element ? target : null
   while (node && node !== boundary) {
     const style = getComputedStyle(node)
-    const scrollable = style.overflowX === 'auto' || style.overflowX === 'scroll'
-    if (scrollable && node.scrollWidth > node.clientWidth) return true
+    const scrollsHorizontally =
+      (style.overflowX === 'auto' || style.overflowX === 'scroll') &&
+      node.scrollWidth > node.clientWidth
+    const scrollsVertically =
+      (style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+      node.scrollHeight > node.clientHeight
+    if (scrollsHorizontally || scrollsVertically) return true
     node = node.parentElement
   }
   return false
@@ -37,7 +45,7 @@ export const usePullToRefresh = (
 
     const handleTouchStart = (e: TouchEvent) => {
       if (isRefreshingRef.current || e.touches.length !== 1) return
-      if (startsInHorizontalScroller(e.target, el)) {
+      if (startsInNestedScroller(e.target, el)) {
         startYRef.current = null
         return
       }
