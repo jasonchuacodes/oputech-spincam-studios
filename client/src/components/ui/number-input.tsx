@@ -102,6 +102,7 @@ function NumberInputField({
         value={text}
         placeholder={props.placeholder ?? '0'}
         type="number"
+        inputMode={props.inputMode ?? (decimals > 0 ? 'decimal' : 'numeric')}
         min={min}
         max={max}
         step={step}
