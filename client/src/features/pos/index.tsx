@@ -14,6 +14,7 @@ import { useDisclosure } from '../../hooks/useDisclosure'
 import { ProductCard } from './components/ProductCard'
 import { CurrentSale } from './components/CurrentSale'
 import { CartSheet } from './components/CartSheet'
+import { TransactionConfirmationModal } from './components/TransactionConfirmationModal'
 import { getDraft, saveDraft, clearDraft } from '../../offline/database'
 import { useSyncContext } from '../../context/sync/useSyncContext'
 
@@ -32,9 +33,10 @@ const POSPage = () => {
   const [search, setSearch] = useState('')
   const draftLoaded = useRef(false)
   const cart = useDisclosure()
+  const confirmation = useDisclosure()
 
   const { data: products = [], isLoading } = useProducts(search)
-  const { mutate: createTransaction } = useCreateTransaction()
+  const createTransaction = useCreateTransaction()
   const { status } = useSyncContext()
 
   useEffect(() => {
@@ -90,16 +92,19 @@ const POSPage = () => {
     cart.onClose()
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = () => confirmation.onOpen()
+
+  const handleConfirm = () => {
     const items = transactionItems.map((i) => ({
       productId: i.productId,
       quantity: i.quantity,
     }))
-    createTransaction(
+    createTransaction.mutate(
       { type: TransactionType.Sale, items, paymentType },
       {
         onSuccess: () => {
           handleClear()
+          confirmation.onClose()
           cart.onClose()
           void clearDraft(POS_DRAFT_KEY)
         },
@@ -207,6 +212,15 @@ const POSPage = () => {
         onClear={handleClear}
         onCancel={handleCancel}
         onRemoveItem={handleRemoveItem}
+      />
+
+      <TransactionConfirmationModal
+        open={confirmation.open}
+        items={transactionItems}
+        paymentType={paymentType}
+        loading={createTransaction.isPending}
+        onClose={confirmation.onClose}
+        onConfirm={handleConfirm}
       />
     </div>
   )
