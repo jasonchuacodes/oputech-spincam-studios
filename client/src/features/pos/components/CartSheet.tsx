@@ -11,7 +11,11 @@ interface CartSheetProps {
   onClose: () => void
   items: TransactionItem[]
   paymentType: PaymentType | null
+  cashAmount: string
+  isExactAmount: boolean
   onPaymentTypeChange: (type: PaymentType) => void
+  onCashAmountChange: (amount: string) => void
+  onExactAmountChange: (exact: boolean) => void
   onSubmit: () => void
   onClear: () => void
   onCancel: () => void
@@ -23,7 +27,11 @@ export const CartSheet = ({
   onClose,
   items,
   paymentType,
+  cashAmount,
+  isExactAmount,
   onPaymentTypeChange,
+  onCashAmountChange,
+  onExactAmountChange,
   onSubmit,
   onClear,
   onCancel,
@@ -68,7 +76,11 @@ export const CartSheet = ({
           <CurrentSale
             items={items}
             paymentType={paymentType}
+            cashAmount={cashAmount}
+            isExactAmount={isExactAmount}
             onPaymentTypeChange={onPaymentTypeChange}
+            onCashAmountChange={onCashAmountChange}
+            onExactAmountChange={onExactAmountChange}
             onSubmit={onSubmit}
             onClear={onClear}
             onCancel={onCancel}

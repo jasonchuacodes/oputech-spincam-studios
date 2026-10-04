@@ -30,6 +30,8 @@ const POSPage = () => {
     []
   )
   const [paymentType, setPaymentType] = useState<PaymentType>(PaymentType.Cash)
+  const [cashAmount, setCashAmount] = useState('')
+  const [isExactAmount, setIsExactAmount] = useState(true)
   const [search, setSearch] = useState('')
   const draftLoaded = useRef(false)
   const cart = useDisclosure()
@@ -85,14 +87,56 @@ const POSPage = () => {
     setTransactionItems((prev) => prev.filter((i) => i.productId !== productId))
   }
 
-  const handleClear = () => setTransactionItems([])
+  const resetCashPayment = () => {
+    setCashAmount('')
+    setIsExactAmount(true)
+  }
+
+  const handlePaymentTypeChange = (type: PaymentType) => {
+    setPaymentType(type)
+    if (type === PaymentType.Online) resetCashPayment()
+  }
+
+  const handleExactAmountChange = (exact: boolean) => {
+    setIsExactAmount(exact)
+    setCashAmount('')
+  }
+
+  const handleClear = () => {
+    setTransactionItems([])
+    resetCashPayment()
+  }
 
   const handleCancel = () => {
     handleClear()
     cart.onClose()
   }
 
-  const handleSubmit = () => confirmation.onOpen()
+  const total = transactionItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  )
+  const totalInCents = Math.round(total * 100)
+  const enteredCash = Number(cashAmount)
+  const enteredCashInCents = Math.round(enteredCash * 100)
+  const cashReceivedInCents = isExactAmount
+    ? totalInCents
+    : enteredCashInCents
+  const cashReceived = cashReceivedInCents / 100
+  const hasValidCashAmount =
+    isExactAmount ||
+    (cashAmount !== '' &&
+      Number.isFinite(enteredCash) &&
+      enteredCashInCents >= totalInCents)
+  const change =
+    paymentType === PaymentType.Cash && hasValidCashAmount
+      ? Math.max(0, cashReceivedInCents - totalInCents) / 100
+      : 0
+
+  const handleSubmit = () => {
+    if (paymentType === PaymentType.Cash && !hasValidCashAmount) return
+    confirmation.onOpen()
+  }
 
   const handleConfirm = () => {
     const items = transactionItems.map((i) => ({
@@ -193,7 +237,11 @@ const POSPage = () => {
           <CurrentSale
             items={transactionItems}
             paymentType={paymentType}
-            onPaymentTypeChange={setPaymentType}
+            cashAmount={cashAmount}
+            isExactAmount={isExactAmount}
+            onPaymentTypeChange={handlePaymentTypeChange}
+            onCashAmountChange={setCashAmount}
+            onExactAmountChange={handleExactAmountChange}
             onSubmit={handleSubmit}
             onClear={handleClear}
             onCancel={handleCancel}
@@ -207,7 +255,11 @@ const POSPage = () => {
         onClose={cart.onClose}
         items={transactionItems}
         paymentType={paymentType}
-        onPaymentTypeChange={setPaymentType}
+        cashAmount={cashAmount}
+        isExactAmount={isExactAmount}
+        onPaymentTypeChange={handlePaymentTypeChange}
+        onCashAmountChange={setCashAmount}
+        onExactAmountChange={handleExactAmountChange}
         onSubmit={handleSubmit}
         onClear={handleClear}
         onCancel={handleCancel}
@@ -218,6 +270,8 @@ const POSPage = () => {
         open={confirmation.open}
         items={transactionItems}
         paymentType={paymentType}
+        cashReceived={cashReceived}
+        change={change}
         loading={createTransaction.isPending}
         onClose={confirmation.onClose}
         onConfirm={handleConfirm}

@@ -1,14 +1,19 @@
+import { useId } from 'react'
 import { Trash2, X } from 'lucide-react'
 import { cn } from '../../../utils/cn'
 import { formatCurrency } from '../../../utils/number'
 import { PaymentType, TransactionItem } from '../../../services/transaction/transaction.types'
 import { toTitleCase } from '../../../utils/text'
-import { Button } from '../../../components'
+import { Button, Input } from '../../../components'
 
 interface CurrentSaleProps {
   items: TransactionItem[]
   paymentType: PaymentType | null
+  cashAmount: string
+  isExactAmount: boolean
   onPaymentTypeChange: (type: PaymentType) => void
+  onCashAmountChange: (amount: string) => void
+  onExactAmountChange: (exact: boolean) => void
   onSubmit: () => void
   onClear: () => void
   onCancel: () => void
@@ -18,15 +23,37 @@ interface CurrentSaleProps {
 export const CurrentSale = ({
   items,
   paymentType,
+  cashAmount,
+  isExactAmount,
   onPaymentTypeChange,
+  onCashAmountChange,
+  onExactAmountChange,
   onSubmit,
   onClear,
   onCancel,
   onRemoveItem,
 }: CurrentSaleProps) => {
+  const cashAmountId = useId()
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalInCents = Math.round(total * 100)
   const hasItems = items.length > 0
-  const selectedItems = hasItems && paymentType !== null
+  const enteredCash = Number(cashAmount)
+  const enteredCashInCents = Math.round(enteredCash * 100)
+  const cashReceivedInCents = isExactAmount
+    ? totalInCents
+    : enteredCashInCents
+  const hasValidCashAmount =
+    isExactAmount ||
+    (cashAmount !== '' &&
+      Number.isFinite(enteredCash) &&
+      enteredCashInCents >= totalInCents)
+  const canSubmit =
+    hasItems &&
+    paymentType !== null &&
+    (paymentType !== PaymentType.Cash || hasValidCashAmount)
+  const change = hasValidCashAmount
+    ? Math.max(0, cashReceivedInCents - totalInCents) / 100
+    : 0
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-lg border bg-white p-4">
@@ -102,14 +129,57 @@ export const CurrentSale = ({
               </Button>
             ))}
           </div>
+
+          {paymentType === PaymentType.Cash && hasItems && (
+            <div className="mt-2 flex flex-col gap-2">
+              <Button
+                type="button"
+                variant={isExactAmount ? 'default' : 'outline'}
+                aria-pressed={isExactAmount}
+                onClick={() => onExactAmountChange(!isExactAmount)}
+                className="w-full"
+              >
+                Exact Amount
+              </Button>
+
+              {!isExactAmount && (
+                <div className="flex flex-col gap-1">
+                  <label htmlFor={cashAmountId} className="text-xs font-medium text-slate-500">
+                    Cash Amount
+                  </label>
+                  <Input
+                    id={cashAmountId}
+                    type="number"
+                    inputMode="decimal"
+                    min={totalInCents / 100}
+                    step="0.01"
+                    placeholder={total.toFixed(2)}
+                    value={cashAmount}
+                    aria-invalid={cashAmount !== '' && !hasValidCashAmount}
+                    onChange={(event) => onCashAmountChange(event.target.value)}
+                  />
+                  {cashAmount !== '' && !hasValidCashAmount && (
+                    <span className="text-xs text-red-500">
+                      Cash amount cannot be less than the total.
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm font-medium text-slate-700">
+                <span>Change</span>
+                <span>{formatCurrency(change)}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-1 border-t pt-3">
           <Button
             size="lg"
-            disabled={!selectedItems}
+            disabled={!canSubmit}
             onClick={onSubmit}
-            className={cn('w-full', !selectedItems && 'opacity-40')}
+            className={cn('w-full', !canSubmit && 'opacity-40')}
           >
             Pay
           </Button>
