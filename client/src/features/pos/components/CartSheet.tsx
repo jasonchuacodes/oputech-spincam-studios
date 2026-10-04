@@ -1,7 +1,5 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useVerticalDrag } from '../../../hooks/useVerticalDrag'
-import { PaymentType, TransactionItem } from '../../../services/transaction/transaction.types'
-import { CurrentSale } from './CurrentSale'
 
 const DISMISS_DISTANCE_THRESHOLD = 120
 const DISMISS_VELOCITY_THRESHOLD = 0.5
@@ -9,33 +7,13 @@ const DISMISS_VELOCITY_THRESHOLD = 0.5
 interface CartSheetProps {
   open: boolean
   onClose: () => void
-  items: TransactionItem[]
-  paymentType: PaymentType | null
-  cashAmount: string
-  isExactAmount: boolean
-  onPaymentTypeChange: (type: PaymentType) => void
-  onCashAmountChange: (amount: string) => void
-  onExactAmountChange: (exact: boolean) => void
-  onSubmit: () => void
-  onClear: () => void
-  onCancel: () => void
-  onRemoveItem: (productId: string) => void
+  children: ReactNode
 }
 
 export const CartSheet = ({
   open,
   onClose,
-  items,
-  paymentType,
-  cashAmount,
-  isExactAmount,
-  onPaymentTypeChange,
-  onCashAmountChange,
-  onExactAmountChange,
-  onSubmit,
-  onClear,
-  onCancel,
-  onRemoveItem,
+  children,
 }: CartSheetProps) => {
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -73,19 +51,7 @@ export const CartSheet = ({
           <div className="h-1 w-10 rounded-full bg-slate-200" />
         </div>
         <div className="flex min-h-0 flex-1 flex-col p-4">
-          <CurrentSale
-            items={items}
-            paymentType={paymentType}
-            cashAmount={cashAmount}
-            isExactAmount={isExactAmount}
-            onPaymentTypeChange={onPaymentTypeChange}
-            onCashAmountChange={onCashAmountChange}
-            onExactAmountChange={onExactAmountChange}
-            onSubmit={onSubmit}
-            onClear={onClear}
-            onCancel={onCancel}
-            onRemoveItem={onRemoveItem}
-          />
+          {children}
         </div>
       </div>
     </div>

@@ -11,8 +11,6 @@ interface TransactionConfirmationModalProps {
   open: boolean
   items: TransactionItem[]
   paymentType: PaymentType
-  cashReceived: number
-  change: number
   loading: boolean
   onClose: () => void
   onConfirm: () => void
@@ -22,8 +20,6 @@ export const TransactionConfirmationModal = ({
   open,
   items,
   paymentType,
-  cashReceived,
-  change,
   loading,
   onClose,
   onConfirm,
@@ -78,22 +74,6 @@ export const TransactionConfirmationModal = ({
             <span>Total</span>
             <span>{formatCurrency(total)}</span>
           </div>
-          {paymentType === PaymentType.Cash && (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Cash Received</span>
-                <span className="font-medium text-slate-800">
-                  {formatCurrency(cashReceived)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Change</span>
-                <span className="font-medium text-slate-800">
-                  {formatCurrency(change)}
-                </span>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </CustomModal>

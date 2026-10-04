@@ -1,19 +1,24 @@
 import { useId } from 'react'
+import { type Control } from 'react-hook-form'
 import { Trash2, X } from 'lucide-react'
 import { cn } from '../../../utils/cn'
 import { formatCurrency } from '../../../utils/number'
 import { PaymentType, TransactionItem } from '../../../services/transaction/transaction.types'
 import { toTitleCase } from '../../../utils/text'
-import { Button, Input } from '../../../components'
+import { Button } from '../../../components'
+import { NumberInput } from '../../../components/ui/number-input'
+
+export interface CashPaymentForm {
+  cashAmount: number | undefined
+}
 
 interface CurrentSaleProps {
   items: TransactionItem[]
   paymentType: PaymentType | null
-  cashAmount: string
-  isExactAmount: boolean
+  cashAmount: number | undefined
+  cashPaymentControl: Control<CashPaymentForm>
   onPaymentTypeChange: (type: PaymentType) => void
-  onCashAmountChange: (amount: string) => void
-  onExactAmountChange: (exact: boolean) => void
+  onExactAmount: (amount: number) => void
   onSubmit: () => void
   onClear: () => void
   onCancel: () => void
@@ -24,10 +29,9 @@ export const CurrentSale = ({
   items,
   paymentType,
   cashAmount,
-  isExactAmount,
+  cashPaymentControl,
   onPaymentTypeChange,
-  onCashAmountChange,
-  onExactAmountChange,
+  onExactAmount,
   onSubmit,
   onClear,
   onCancel,
@@ -37,22 +41,17 @@ export const CurrentSale = ({
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalInCents = Math.round(total * 100)
   const hasItems = items.length > 0
-  const enteredCash = Number(cashAmount)
-  const enteredCashInCents = Math.round(enteredCash * 100)
-  const cashReceivedInCents = isExactAmount
-    ? totalInCents
-    : enteredCashInCents
+  const enteredCashInCents = Math.round((cashAmount ?? 0) * 100)
   const hasValidCashAmount =
-    isExactAmount ||
-    (cashAmount !== '' &&
-      Number.isFinite(enteredCash) &&
-      enteredCashInCents >= totalInCents)
+    cashAmount !== undefined &&
+    Number.isFinite(cashAmount) &&
+    enteredCashInCents >= totalInCents
   const canSubmit =
     hasItems &&
     paymentType !== null &&
     (paymentType !== PaymentType.Cash || hasValidCashAmount)
   const change = hasValidCashAmount
-    ? Math.max(0, cashReceivedInCents - totalInCents) / 100
+    ? Math.max(0, enteredCashInCents - totalInCents) / 100
     : 0
 
   return (
@@ -134,37 +133,31 @@ export const CurrentSale = ({
             <div className="mt-2 flex flex-col gap-2">
               <Button
                 type="button"
-                variant={isExactAmount ? 'default' : 'outline'}
-                aria-pressed={isExactAmount}
-                onClick={() => onExactAmountChange(!isExactAmount)}
+                variant="outline"
+                onClick={() => onExactAmount(totalInCents / 100)}
                 className="w-full"
               >
                 Exact Amount
               </Button>
 
-              {!isExactAmount && (
-                <div className="flex flex-col gap-1">
-                  <label htmlFor={cashAmountId} className="text-xs font-medium text-slate-500">
-                    Cash Amount
-                  </label>
-                  <Input
-                    id={cashAmountId}
-                    type="number"
-                    inputMode="decimal"
-                    min={totalInCents / 100}
-                    step="0.01"
-                    placeholder={total.toFixed(2)}
-                    value={cashAmount}
-                    aria-invalid={cashAmount !== '' && !hasValidCashAmount}
-                    onChange={(event) => onCashAmountChange(event.target.value)}
-                  />
-                  {cashAmount !== '' && !hasValidCashAmount && (
-                    <span className="text-xs text-red-500">
-                      Cash amount cannot be less than the total.
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className="flex flex-col gap-1">
+                <label htmlFor={cashAmountId} className="text-xs font-medium text-slate-500">
+                  Cash Amount
+                </label>
+                <NumberInput
+                  control={cashPaymentControl}
+                  name="cashAmount"
+                  min={totalInCents / 100}
+                  step={0.01}
+                  hideControls
+                  placeholder={total.toFixed(2)}
+                />
+                {cashAmount !== undefined && !hasValidCashAmount && (
+                  <span className="text-xs text-red-500">
+                    Cash amount cannot be less than the total.
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center justify-between text-sm font-medium text-slate-700">
                 <span>Change</span>

@@ -18,6 +18,7 @@ type NumberInputProps<T extends FieldValues> = Omit<
   step?: number
   min?: number
   max?: number
+  hideControls?: boolean
 }
 
 interface NumberField {
@@ -37,6 +38,7 @@ interface NumberInputFieldProps extends Omit<
   step: number
   min?: number
   max?: number
+  hideControls?: boolean
 }
 
 function NumberInputField({
@@ -45,6 +47,7 @@ function NumberInputField({
   step,
   min,
   max,
+  hideControls,
   className,
   ...props
 }: NumberInputFieldProps) {
@@ -55,6 +58,12 @@ function NumberInputField({
   const round = (n: number) => Number(n.toFixed(decimals))
 
   const [text, setText] = useState(() => field.value?.toString() ?? '')
+  const [lastValue, setLastValue] = useState(field.value)
+
+  if (field.value !== lastValue) {
+    setLastValue(field.value)
+    setText(field.value?.toString() ?? '')
+  }
 
   const current = Number(text || 0)
   const atMax = max !== undefined && current >= max
@@ -63,6 +72,7 @@ function NumberInputField({
   const commit = (next: number) => {
     const rounded = round(next)
     setText(String(rounded))
+    setLastValue(rounded)
     field.onChange(rounded)
   }
 
@@ -98,30 +108,34 @@ function NumberInputField({
         onChange={(e) => {
           setText(e.target.value)
           const parsed = e.target.valueAsNumber
-          field.onChange(Number.isNaN(parsed) ? 0 : round(parsed))
+          const value = Number.isNaN(parsed) ? undefined : round(parsed)
+          setLastValue(value)
+          field.onChange(value)
         }}
         className="flex-1 [appearance:textfield] bg-white px-3 text-base outline-none md:text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
 
-      <div className="border-border flex w-10 flex-col border-l">
-        <button
-          type="button"
-          onClick={increment}
-          disabled={atMax}
-          className="flex flex-1 items-center justify-center hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
-        >
-          <ChevronUp className="h-4 w-4" />
-        </button>
+      {!hideControls && (
+        <div className="border-border flex w-10 flex-col border-l">
+          <button
+            type="button"
+            onClick={increment}
+            disabled={atMax}
+            className="flex flex-1 items-center justify-center hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
 
-        <button
-          type="button"
-          onClick={decrement}
-          disabled={atMin}
-          className="border-border flex flex-1 items-center justify-center border-t hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
-        >
-          <ChevronDown className="h-4 w-4" />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={decrement}
+            disabled={atMin}
+            className="border-border flex flex-1 items-center justify-center border-t hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -132,6 +146,7 @@ export function NumberInput<T extends FieldValues>({
   step = 1,
   min,
   max,
+  hideControls,
   className,
   ...props
 }: NumberInputProps<T>) {
@@ -147,6 +162,7 @@ export function NumberInput<T extends FieldValues>({
           step={step}
           min={min}
           max={max}
+          hideControls={hideControls}
           className={className}
         />
       )}
